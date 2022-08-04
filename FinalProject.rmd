@@ -1,0 +1,66 @@
+```{R}
+library(tidyjson)
+library(ggplot2)
+library(dplyr)
+```
+
+```{R}
+# Load a subset of the data
+g_df = read.csv("train.csv", nrows = 100000)
+```
+
+
+```{R}
+# Extract the Geographic Data
+geo_df = g_df %>% as.tbl_json(json.column="geoNetwork") %>% spread_all %>% select(sessionId, continent, subContinent)
+
+# Extract the Transaction & Page Visit Data
+trans_df = (g_df %>% as.tbl_json(json.column="totals") %>% spread_all ) %>% filter(!is.na(transactionRevenue)) 
+
+# Combine
+total_df = merge(geo_df, trans_df, by="sessionId")
+
+# Cast for convenience
+total_df$transactionRevenue = as.numeric(total_df$transactionRevenue)
+```
+
+
+Mean transaction revenue by Channel Grouping
+
+```{R}
+ggplot(total_df, aes(as.factor(channelGrouping), transactionRevenue)) + geom_bar(stat = "summary", fun = "mean")
+```
+
+Mean Revenue by Page Views
+
+```{R}
+ggplot(total_df, aes(as.numeric(pageviews), transactionRevenue)) + geom_point(stat = "summary", fun = "mean")
+```
+
+Mean Revenue by Number of Hits
+
+```{R}
+ggplot(total_df, aes(as.numeric(hits), transactionRevenue)) + geom_point(stat = "summary", fun = "mean")
+```
+
+Mean Revenue by Continent
+
+```{R}
+ggplot(total_df, aes(as.factor(continent), transactionRevenue)) + geom_bar(stat = "summary", fun = "mean")
+```
+
+Interaction Model incorporating the above parameters
+
+```{R}
+initial_model = lm(transactionRevenue ~ (as.factor(channelGrouping) + as.numeric(pageviews) + as.numeric(visits) + as.factor(continent))^3, data=total_df)
+fit_model = step(initial_model, direction="backward", k=2, trace=FALSE) # Fit Using AIC
+summary(fit_model)
+```
+
+Log Model Interaction incorporating the above paramters
+
+```{R}
+initial_model = lm(log(transactionRevenue) ~ (as.factor(channelGrouping) + as.numeric(pageviews) + as.numeric(visits) + as.factor(continent))^3, data=total_df)
+fit_model = step(initial_model, direction="backward", k=2, trace=FALSE) # Fit Using AIC
+summary(fit_model)
+```
