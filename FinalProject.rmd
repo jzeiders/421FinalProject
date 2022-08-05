@@ -1,12 +1,41 @@
-```{R}
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# Google Store Revenue Modeling
+## Introduction
+The dataset is a collection of google store website visit data. We will be attempting to predict the total spend from December 1st 2018 through January 31st 2019 for individual user's based on their visit data. The business value in this is inherent: being able to predict revenue / user is essential to determining & targeting marketing efforts. Additionally, it allows for improved forward projections of revenue based on prior user visit data.
+
+The data files include a training dataset and a test dataset between the two there are approximately ~170k observations that we will work with. 
+We will be attempting to model specifically the transactionRevenue in terms of the following primary predictors: 
+
+channelGrouping - the channel via which the user came to the Store
+date - the date on which the user visited the Store
+device - the specifications for the device used to access the Store
+geoNetwork - this section contains information about the geography of the user
+socialEngagementType - engagement type, either “Socially Engaged” or “Not Socially Engaged”
+transactionRevenue - this section contains aggregate values across the session
+trafficSource - this section contains information about the Traffic Source from which the session originated
+visitNumber - the session number for this user
+visitStartTime - the timestamp (POSIX).
+
+Given the complexity of a true model for revenue/user we only expect to be able to generate a model capable of explaining a small percentage of revenue/user. However, even that  has substantial value when measuring aggregate transactions in the > $100,000,000 range.
+
+## Methods
+
+```{R} 
+# Dependencies
 library(tidyjson)
 library(ggplot2)
 library(dplyr)
 ```
 
+
 ```{R}
-# Load a subset of the data
-g_df = read.csv("train.csv", nrows = 100000)
+# Load a subset of the data (100k take a couple minutes to run -> results in about ~2k clean data points)
+g_df = read.csv("train.csv", nrows = 10000)
 ```
 
 
@@ -24,6 +53,23 @@ total_df = merge(geo_df, trans_df, by="sessionId")
 total_df$transactionRevenue = as.numeric(total_df$transactionRevenue)
 ```
 
+Interaction Model incorporating significant parameters
+
+```{R}
+initial_model = lm(transactionRevenue ~ (as.factor(channelGrouping) + as.numeric(pageviews) + as.numeric(visits) + as.factor(subContinent))^3, data=total_df)
+fit_model = step(initial_model, direction="backward", k=2, trace=FALSE) # Fit Using AIC
+summary(fit_model)
+```
+
+Log Interaction Model incorporating significant parameters
+
+```{R}
+initial_model = lm(log(transactionRevenue) ~ (as.factor(channelGrouping) + as.numeric(pageviews) + as.numeric(visits) + as.factor(subContinent))^3, data=total_df)
+fit_model = step(initial_model, direction="backward", k=2, trace=FALSE) # Fit Using AIC
+summary(fit_model)
+```
+
+## Results
 
 Mean transaction revenue by Channel Grouping
 
@@ -49,18 +95,12 @@ Mean Revenue by Continent
 ggplot(total_df, aes(as.factor(continent), transactionRevenue)) + geom_bar(stat = "summary", fun = "mean")
 ```
 
-Interaction Model incorporating the above parameters
 
-```{R}
-initial_model = lm(transactionRevenue ~ (as.factor(channelGrouping) + as.numeric(pageviews) + as.numeric(visits) + as.factor(continent))^3, data=total_df)
-fit_model = step(initial_model, direction="backward", k=2, trace=FALSE) # Fit Using AIC
-summary(fit_model)
-```
 
-Log Model Interaction incorporating the above paramters
+## Discussion
 
-```{R}
-initial_model = lm(log(transactionRevenue) ~ (as.factor(channelGrouping) + as.numeric(pageviews) + as.numeric(visits) + as.factor(continent))^3, data=total_df)
-fit_model = step(initial_model, direction="backward", k=2, trace=FALSE) # Fit Using AIC
-summary(fit_model)
-```
+## Appendix
+
+### Citations
+https://www.kaggle.com/code/erikbruin/google-analytics-eda-lightgbm-screenshots
+https://www.kaggle.com/code/mrlong/r-flatten-json-columns-to-make-single-data-frame
