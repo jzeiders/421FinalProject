@@ -102,5 +102,6 @@ ggplot(total_df, aes(as.factor(continent), transactionRevenue)) + geom_bar(stat 
 ## Appendix
 
 ### Citations
+Code techniques taken from:
 https://www.kaggle.com/code/erikbruin/google-analytics-eda-lightgbm-screenshots
 https://www.kaggle.com/code/mrlong/r-flatten-json-columns-to-make-single-data-frame
