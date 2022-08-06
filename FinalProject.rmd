@@ -2,42 +2,81 @@
 output:
   pdf_document: default
   html_document: default
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 # Google Store Revenue Modeling
+
 ## Introduction
-The dataset is a collection of google store website visit data. We will be attempting to predict the total spend from December 1st 2018 through January 31st 2019 for individual user's based on their visit data. The business value in this is inherent: being able to predict revenue / user is essential to determining & targeting marketing efforts. Additionally, it allows for improved forward projections of revenue based on prior user visit data.
 
-The data files include a training dataset and a test dataset between the two there are approximately ~170k observations that we will work with. 
-We will be attempting to model specifically the transactionRevenue in terms of the following primary predictors: 
+We will be attempting to predict the total spend on the Google
+Merchandise store from December 1st 2018 through January 31st 2019 for
+individual user's based on their visit data. The business value in this
+is inherent: being able to predict revenue / user is essential to
+determining & targeting marketing efforts. Additionally, it allows for
+improved forward projections of revenue based on prior user visit data. Our 
+goal for the predictive value of the model is limited, given the complexity of a true model for revenue/user.
+The factors for that go well beyond page-view data. Still we expect to produce a model
+capable of explaining some of explaining a small percentage of
+revenue/user. That has substantial value when measuring
+aggregate transactions in the \> \$100,000,000 range at Google's scale.
 
-channelGrouping - the channel via which the user came to the Store
-date - the date on which the user visited the Store
-device - the specifications for the device used to access the Store
-geoNetwork - this section contains information about the geography of the user
-socialEngagementType - engagement type, either “Socially Engaged” or “Not Socially Engaged”
-transactionRevenue - this section contains aggregate values across the session
-trafficSource - this section contains information about the Traffic Source from which the session originated
-visitNumber - the session number for this user
-visitStartTime - the timestamp (POSIX).
 
-Given the complexity of a true model for revenue/user we only expect to be able to generate a model capable of explaining a small percentage of revenue/user. However, even that  has substantial value when measuring aggregate transactions in the > $100,000,000 range.
+The dataset for this is provided by Google on [Kaggle](https://www.kaggle.com/competitions/ga-customer-revenue-prediction/data).
+In this dataset there are \~170k observations of 12 dimensions.
+However, there are condensed JSON columns along with a large amount of
+missing Transaction Revenues. This led us to create a cleaned dataset of
+approximately \~6k observations of 28 dimensions. These dimensions are:
+
+-   Channel Grouping \| The channel via which the user came to the Store
+-   Visit Number \| The number of time's the user had visited the Store
+-   Browser \| The web browser the user used to enter the store (e.g
+    Firefox)
+-   Operating System \| The user's operating system (e.g. iOS)
+-   IsMobile \| Flag for if the user is on mobile
+-   Device Category \| Type of user's device (e.g. Desktop)
+-   Continent \| User's located continent (e.g. Europe)
+-   Subcontinent \| User's located subcontinent (e.g. Central America)
+-   Country \| User's located country (e.g. France)
+-   Region \| User's located State or equivalent of a country (e.g.
+    California)
+-   Metro \| User's located metro (e.g. Bay Area)
+-   City \| User's located city (e.g. Oakland)
+-   Network Domain \| Domain for user's network
+-   Hits \| The number of store listings showed
+-   Page Views \| The number of page's viewed in the store
+-   Bounces \| Flag for if the user immediately left the page
+-   New Visits \| Flag for if it was a user's 1st visit
+-   Session Quality \| A numeric rating of "Session Quality" as defined
+    by Google
+-   Time On Site \| The time the user spent on the site (seconds)
+-   Campaign \| Name of ad campaign user entered from
+-   Source \| Referring website
+-   Medium \| Categorization of user entry type (e.g. Organic)
+-   Keyword \| Flag if the user entered from a google related keyword
+-   IsTrueDirect \| Flag if the user entered directly from the website
+-   Morning \| Flag for if user entered in the morning
+-   Day \| The day of the week (e.g Mon)
+-   Month \| The month of the year (e.g. Oct)
+-   Transaction Revenue \| Total user transaction revenue (USD)
+
+
 
 ## Methods
 
-```{R} 
+```{R}
 # Dependencies
 library(tidyjson)
 library(ggplot2)
 library(dplyr)
 ```
 
-
 ```{R}
 # Load a subset of the data (100k take a couple minutes to run -> results in about ~2k clean data points)
 g_df = read.csv("train.csv", nrows = 10000)
 ```
-
 
 ```{R}
 # Extract the Geographic Data
@@ -95,13 +134,16 @@ Mean Revenue by Continent
 ggplot(total_df, aes(as.factor(continent), transactionRevenue)) + geom_bar(stat = "summary", fun = "mean")
 ```
 
-
+```{R}
+df = read.csv("~/Downloads/train_rich_v2.csv")
+```
 
 ## Discussion
 
 ## Appendix
 
 ### Citations
+
 Code techniques taken from:
-https://www.kaggle.com/code/erikbruin/google-analytics-eda-lightgbm-screenshots
-https://www.kaggle.com/code/mrlong/r-flatten-json-columns-to-make-single-data-frame
+<https://www.kaggle.com/code/erikbruin/google-analytics-eda-lightgbm-screenshots>
+<https://www.kaggle.com/code/mrlong/r-flatten-json-columns-to-make-single-data-frame>
